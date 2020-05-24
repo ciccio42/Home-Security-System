@@ -9,6 +9,9 @@
 #define INC_SYSTEM_CONFIGURATION_H_
 
 #include <stdint.h>
+#include "stm32f4xx.h"
+#include "handle_timer.h"
+
 /**
  * @brief Define USER_PIN type
  */
@@ -27,10 +30,12 @@ typedef uint8_t allarm_duration;
  * @brief Define Configuration structure
  */
 struct system_configuration_s{
+
 	user_pin pin;
 	sensor_delay sensor_delay_1;
 	sensor_delay sensor_delay_2;
 	allarm_duration duration;
+
 };
 
 /**
@@ -62,11 +67,16 @@ typedef struct system_configuration_s system_configuration_t;
 #define DELAY_SIZE (2)
 #define DURATION_SIZE (2)
 
+/**
+ * @brief define timer's period for configuration task.
+ */
+#define CONFIGURATION_PERIOD (29999)
 
 /**
  * @brief Defines protocol status type
  */
 typedef enum{
+	IDLE,
 	START,
 	PIN_T,
 	PIN_R,
@@ -86,8 +96,9 @@ typedef enum{
  */
 typedef struct{
 
-	system_configuration_t configuration;
+	system_configuration_t *configuration;
 	Protocol_Status_Type state;
+	TIM_HandleTypeDef *timer;
 
 }configuration_protocol_t;
 
@@ -96,7 +107,7 @@ extern configuration_protocol_t protocol;
 /**
  * @brief Initialize protocol's structure with the given system's configuration.
  */
-void init_protocol(system_configuration_t *configuration);
+void init_protocol(system_configuration_t *configuration, TIM_HandleTypeDef *timer);
 
 /**
  * @brief Perform system_configuration procedure in a blocking way.

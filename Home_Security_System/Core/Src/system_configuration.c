@@ -2,6 +2,7 @@
 #include "usart.h"
 #include "tim.h"
 #include <string.h>
+#include "handle_timer.h"
 
 configuration_protocol_t protocol;
 
@@ -14,26 +15,37 @@ uint8_t look = 0;
 
 static const user_pin DEFAULT_USER_PIN[4] = {'0','0','0','0'};
 
+void init_protocol(system_configuration_t *configuration, TIM_HandleTypeDef *timer){
+
+	protocol.configuration = configuration;
+
+	protocol.state = IDLE;
+
+	protocol.timer = timer;
+
+	set_timer_period(protocol.timer, CONFIGURATION_PERIOD);
+
+}
+
 Protocol_Status_Type configuration_protocol(){
 
 	protocol.state = START;
 
 	HAL_UART_Transmit_IT(&huart2, (uint8_t *)SYSTEM_CONFIGURATION, strlen(SYSTEM_CONFIGURATION));
 
-	HAL_TIM_Base_Start_IT(&htim10);
+	start_timer_IT(protocol.timer);
 
 	while(protocol.state != END_CUSTOM && protocol.state != END_DEFAULT){}
 
 	if(protocol.state == END_DEFAULT){
 		load_default_configuration();
 	}else{
-		if(check_configuration_fields()){
+		if(check_configuration_fields() == 1){
 
 			load_custom_configuration();
 
 		}else{
 
-			HAL_UART_Transmit_IT(&huart2, (uint8_t *)ERROR_STRING, strlen(ERROR_STRING));
 			load_default_configuration();
 
 		}
@@ -124,22 +136,22 @@ uint8_t convert_buffer_to_uint8(uint8_t *buffer){
 
 static uint8_t load_custom_configuration(){
 
-	protocol.configuration.pin = pin_buffer;
+	protocol.configuration->pin = pin_buffer;
 
-	protocol.configuration.sensor_delay_1 = convert_buffer_to_uint8(delay1_buffer);
+	protocol.configuration->sensor_delay_1 = convert_buffer_to_uint8(delay1_buffer);
 
-	protocol.configuration.sensor_delay_2 = convert_buffer_to_uint8(delay2_buffer);
+	protocol.configuration->sensor_delay_2 = convert_buffer_to_uint8(delay2_buffer);
 
-	protocol.configuration.duration =  convert_buffer_to_uint8(duration_buffer);
+	protocol.configuration->duration =  convert_buffer_to_uint8(duration_buffer);
 
 }
 
 static void load_default_configuration(){
 
-	protocol.configuration.pin = DEFAULT_USER_PIN;
-	protocol.configuration.sensor_delay_1 = DEFAULT_DELAY;
-	protocol.configuration.sensor_delay_2 = DEFAULT_DELAY;
-	protocol.configuration.duration = DEFAULT_DURATION;
+	protocol.configuration->pin = DEFAULT_USER_PIN;
+	protocol.configuration->sensor_delay_1 = DEFAULT_DELAY;
+	protocol.configuration->sensor_delay_2 = DEFAULT_DELAY;
+	protocol.configuration->duration = DEFAULT_DURATION;
 
 }
 
@@ -193,23 +205,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 	}else if(protocol.state == DURATION_R){
 
-		HAL_TIM_Base_Stop(&htim10);
+		stop_timer_IT(protocol.timer);
 		protocol.state = END_CUSTOM;
 		HAL_UART_Transmit_IT(&huart2, (uint8_t *)duration_buffer,DURATION_SIZE);
 
 	}
-
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-
-	if(htim->Instance == TIM10 && protocol.state != END_CUSTOM){
-
-		HAL_UART_Abort_IT(&huart2);
-		protocol.state = END_DEFAULT;
-
-	}
-
-	HAL_TIM_Base_Stop(&htim10);
 
 }

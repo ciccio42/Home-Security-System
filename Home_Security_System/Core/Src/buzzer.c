@@ -37,5 +37,5 @@ void active_buzzer(buzzer *buzzer, buzzer_state state, ringtone ringtone, TIM_Ha
 
 void deactive_buzzer(buzzer *buzzer, buzzer_state state, TIM_HandleTypeDef *timer){
 	buzzer->state = BUZZER_INACTIVE;
-	HAL_TIM_PWM_Stop_IT(timer, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Stop_IT(timer, TIM_CHANNEL_2); //controllare
 }

@@ -14,11 +14,6 @@
 #include "system_configuration.h"
 
 
-/**
- * @brief define Timer's period for log task.
- */
-#define LOG_PERIOD (9999)
-
 
 /**
  * @brief initialize timer with given prescaler and period

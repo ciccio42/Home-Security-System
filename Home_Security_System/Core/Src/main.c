@@ -88,15 +88,13 @@ int main(void)
 
   ds1307rtc_init(&rtc, &hi2c1);
 
-  ds1307rtc_set_date_time(&rtc);
-
   HAL_Delay(1000);
 
   ds1307rtc_update_date_time(&rtc);
 
-  //init_protocol(&configuration, &htim10, &rtc);
+  init_protocol(&configuration, &htim10, &rtc);
 
-  //configuration_protocol();
+  configuration_protocol();
 
   while (1){}
   /* USER CODE END 3 */

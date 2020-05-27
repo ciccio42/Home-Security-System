@@ -43,6 +43,8 @@
 #define OSCILLATOR_ENABLED (0x00)
 #define AM_MODE (0x40)
 #define PM_MODE (0x00)
+
+
 /**
  * Define date_time structure and type
  */
@@ -95,5 +97,16 @@ int8_t ds1307rtc_update_date_time(rtc_t *rtc);
  * @brief write the rtc's date_time value into memory, in blocking mode.
  */
 int8_t ds1307rtc_set_date_time(rtc_t *rtc);
+
+/**
+ * @brief set the internal rtc date structure fields;
+ */
+int8_t set_date(rtc_t *rtc,int8_t year,int8_t month,int8_t date);
+
+/**
+ * @brief set the internal rtc time structure fields;
+ */
+int8_t set_time(rtc_t *rtc,int8_t hour,int8_t minute,int8_t second);
+
 
 #endif /* INC_DS1307RTC_H_ */

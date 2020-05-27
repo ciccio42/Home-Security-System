@@ -27,6 +27,11 @@ typedef uint8_t sensor_delay;
  */
 typedef uint8_t allarm_duration;
 
+/**
+ * Define protocol Error
+ */
+#define PROTOCOL_OK (0)
+#define PROTOCOL_ERR (-1)
 
 /**
  * @brief Define Configuration structure
@@ -37,7 +42,6 @@ struct system_configuration_s{
 	sensor_delay sensor_delay_1;
 	sensor_delay sensor_delay_2;
 	allarm_duration duration;
-	date_time_t date_time;
 
 };
 
@@ -60,16 +64,19 @@ typedef struct system_configuration_s system_configuration_t;
 #define INSERT_DELAY_SENSOR_1 ("\n\rISERT PIR's DELAY [xx]: ")
 #define INSERT_DELAY_SENSOR_2 ("\n\rINSERT BARRIER's DELAY [xx]: ")
 #define INSERT_ALLARM_DURATION ("\n\rINSERT ALLARM's DURATION [xx]: ")
-#define INSERT_DATE_TIME ("\n\rINSERT DATE and TIME [DD-MM-AAAA Hr:MM:SS]: ")
-#define ERROR_STRING ("\n\rInvalid field inserted")
+#define INSERT_DATE_TIME ("\n\rINSERT DATE and TIME [dd/mm/yr hr:mm:ss]: ")
 
+#define ERROR_STRING ("\n\rERROR RESTART THE BOARD")
+#define CUSTOM_CONFIGURATION_LOADED ("\n\rCustom configuration loaded")
+#define DEFAULT_CONFIGURATION_LOADED ("\n\rDefault configuration loaded")
 /**
  * @brief Define configuration's fields size
  */
 #define PIN_SIZE (4)
 #define DELAY_SIZE (2)
 #define DURATION_SIZE (2)
-#define DATE_TIME_SIZE (19)
+#define DATE_TIME_SIZE (2)
+#define DATE_TIME_BUFFER_SIZE (12)
 
 /**
  * @brief define timer's period for configuration task.
@@ -90,8 +97,18 @@ typedef enum{
 	DELAY2_R,
 	DURATION_T,
 	DURATION_R,
-	DATE_TIME_T,
-	DATE_TIME_R,
+	DATE_T,
+	DATE_R,
+	MONTH_T,
+	MONTH_R,
+	YEAR_T,
+	YEAR_R,
+	HOUR_T,
+	HOUR_R,
+	MINUTE_T,
+	MINUTE_R,
+	SECOND_T,
+	SECOND_R,
 	END_DEFAULT,
 	END_CUSTOM
 } Protocol_Status_Type;
@@ -102,8 +119,11 @@ typedef enum{
 typedef struct{
 
 	system_configuration_t *configuration;
+
 	Protocol_Status_Type state;
+
 	TIM_HandleTypeDef *timer;
+
 	rtc_t *rtc;
 
 }configuration_protocol_t;
@@ -123,16 +143,16 @@ Protocol_Status_Type configuration_protocol();
 /**
  * @brief load default configuration parameters.
  */
-static void load_default_configuration();
+static int8_t load_default_configuration();
 
 /**
  * @brief load custom configuration parameters.
  */
-static void load_custom_configuration();
+static int8_t load_custom_configuration();
 
 /**
  * @brief whether the configuration parameters inserted by the user are valid or not.
  */
-static uint8_t check_configuration_fields();
+static int8_t check_configuration_fields();
 
 #endif /* INC_SYSTEM_CONFIGURATION_H_ */

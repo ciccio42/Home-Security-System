@@ -17,21 +17,21 @@ void buzzer_init(buzzer *buzzer, buzzer_state state, TIM_HandleTypeDef *timer){
 }
 
 
-void active_buzzer(buzzer *buzzer, buzzer_state state, int period, TIM_HandleTypeDef *timer){
+void active_buzzer(buzzer *buzzer, buzzer_state state, int pulse, TIM_HandleTypeDef *timer){
 
 	buzzer->state = BUZZER_ACTIVE;
-	if(period == 299){
+	if(pulse == 299){
 		buzzer->state = RINGTONE_PIR;
 	}
-	if(period == 499){
+	if(pulse == 499){
 		buzzer->ringtone = RINGTONE_BARRIER;
 	}
-	if(period == 999){
+	if(pulse == 999){
 		buzzer->ringtone = RINGTONE_BOTH;
 	}
-
+	__HAL_TIM_SET_COMPARE(timer, TIM_CHANNEL_2, pulse);
 	HAL_TIM_PWM_Start_IT(timer, TIM_CHANNEL_2);
-	__HAL_TIM_SET_AUTORELOAD(timer, period);
+
 }
 
 

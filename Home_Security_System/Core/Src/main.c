@@ -27,6 +27,7 @@
 #include "gpio.h"
 #include "ds1307rtc.h"
 #include "system_configuration.h"
+#include "uart_handler.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -88,6 +89,8 @@ int main(void)
 
   ds1307rtc_init(&rtc, &hi2c1);
 
+  uart_handler_init(&huart2);
+
   HAL_Delay(1000);
 
   ds1307rtc_update_date_time(&rtc);
@@ -95,6 +98,10 @@ int main(void)
   init_protocol(&configuration, &htim10, &rtc);
 
   configuration_protocol();
+
+  HAL_Delay(1000);
+
+  ds1307rtc_update_date_time(&rtc);
 
   while (1){}
   /* USER CODE END 3 */

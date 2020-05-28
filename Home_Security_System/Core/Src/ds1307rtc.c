@@ -156,14 +156,6 @@ int8_t ds1307rtc_set_date_time(rtc_t *rtc){
 
 	uint8_t out_buffer[BUFFER_SIZE];
 
-	/*rtc->date_time.seconds = 30;
-	rtc->date_time.minutes = 59;
-	rtc->date_time.hours = 22;
-	rtc->date_time.day = 7;
-	rtc->date_time.date = 31;
-	rtc->date_time.month = 5;
-	rtc->date_time.year = 20;*/
-
 	prepare_out_buffer(&(rtc->date_time), out_buffer);
 
 	HAL_StatusTypeDef returnValue = HAL_I2C_Mem_Write(rtc->i2c, DS1307_ADDRESS, DS1307_SECONDS, ADDRESS_SIZE, out_buffer, BUFFER_SIZE,HAL_MAX_DELAY);

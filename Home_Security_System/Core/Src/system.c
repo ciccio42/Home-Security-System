@@ -9,10 +9,12 @@
 
 
 void system_init(system_s *system, system_state state, sensor_barrier *barrier, sensor_pir *pir, buzzer *buzzer){
+
 	system->state = state;
 	system->barrier = barrier;
 	system->pir = pir;
 	system->buzzer = buzzer;
+
 }
 
 

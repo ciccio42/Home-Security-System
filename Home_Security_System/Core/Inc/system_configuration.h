@@ -33,17 +33,6 @@ typedef uint8_t allarm_duration;
 #define PROTOCOL_OK (0)
 #define PROTOCOL_ERR (-1)
 
-/**
- * @brief Define Configuration structure
- */
-struct system_configuration_s{
-
-	user_pin *pin;
-	sensor_delay sensor_delay_1;
-	sensor_delay sensor_delay_2;
-	allarm_duration duration;
-
-};
 
 /**
  * @brief Define System configuration type
@@ -129,6 +118,27 @@ typedef struct{
 }configuration_protocol_t;
 
 extern configuration_protocol_t protocol;
+
+extern  uint8_t pin_buffer[PIN_SIZE];
+extern  uint8_t delay1_buffer[DELAY_SIZE];
+extern  uint8_t delay2_buffer[DELAY_SIZE];
+extern  uint8_t duration_buffer[DURATION_SIZE];
+extern  uint8_t date_time_buffer[DATE_TIME_BUFFER_SIZE];
+
+/**
+ * Define variables that count the number of element inserted
+ */
+/*uint8_t pin_element_inserted = 0;
+uint8_t delay1_element_inserted = 0;
+uint8_t delay2_element_inserted = 0;
+uint8_t duration_element_inserted = 0;
+uint8_t date_time_element_inserted = 0;
+uint8_t date_time_element_inserted = 0;*/
+
+extern  uint8_t slash;
+extern  uint8_t space;
+extern  uint8_t colons;
+extern  user_pin DEFAULT_USER_PIN[PIN_SIZE];
 
 /**
  * @brief Initialize protocol's structure with the given system's configuration.

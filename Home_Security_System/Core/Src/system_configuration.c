@@ -4,14 +4,15 @@
 #include <string.h>
 #include "handle_timer.h"
 #include "ds1307rtc.h"
+#include "uart_handler.h"
 
 configuration_protocol_t protocol;
 
-static uint8_t pin_buffer[PIN_SIZE];
-static uint8_t delay1_buffer[DELAY_SIZE];
-static uint8_t delay2_buffer[DELAY_SIZE];
-static uint8_t duration_buffer[DURATION_SIZE];
-static uint8_t date_time_buffer[DATE_TIME_BUFFER_SIZE];
+uint8_t pin_buffer[PIN_SIZE];
+uint8_t delay1_buffer[DELAY_SIZE];
+uint8_t delay2_buffer[DELAY_SIZE];
+uint8_t duration_buffer[DURATION_SIZE];
+uint8_t date_time_buffer[DATE_TIME_BUFFER_SIZE];
 
 /**
  * Define variables that count the number of element inserted
@@ -23,10 +24,10 @@ uint8_t duration_element_inserted = 0;
 uint8_t date_time_element_inserted = 0;
 uint8_t date_time_element_inserted = 0;*/
 
-const uint8_t slash = '/';
-const uint8_t space = ' ';
-const uint8_t colons = ':';
-const user_pin DEFAULT_USER_PIN[PIN_SIZE] = {'0','0','0','0'};
+uint8_t slash = '/';
+uint8_t space = ' ';
+uint8_t colons = ':';
+user_pin DEFAULT_USER_PIN[PIN_SIZE] = {'0','0','0','0'};
 
 void init_protocol(system_configuration_t *configuration, TIM_HandleTypeDef *timer, rtc_t *rtc){
 
@@ -46,7 +47,7 @@ Protocol_Status_Type configuration_protocol(){
 
 	protocol.state = START;
 
-	HAL_UART_Transmit_IT(&huart2, (uint8_t *)SYSTEM_CONFIGURATION, strlen(SYSTEM_CONFIGURATION));
+	send_message_IT((uint8_t *)SYSTEM_CONFIGURATION, strlen(SYSTEM_CONFIGURATION));
 
 	start_timer_IT(protocol.timer);
 
@@ -55,24 +56,30 @@ Protocol_Status_Type configuration_protocol(){
 	if(protocol.state == END_DEFAULT){
 
 		load_default_configuration();
-		HAL_UART_Transmit(&huart2,(uint8_t *)DEFAULT_CONFIGURATION_LOADED, strlen(DEFAULT_CONFIGURATION_LOADED), HAL_MAX_DELAY);
+
+		send_message_IT((uint8_t *)DEFAULT_CONFIGURATION_LOADED, strlen(DEFAULT_CONFIGURATION_LOADED));
 
 	}else{
 
 		if(check_configuration_fields() == PROTOCOL_OK){
 
 			if(load_custom_configuration() == PROTOCOL_OK){
-				HAL_UART_Transmit_IT(&huart2,(uint8_t *)CUSTOM_CONFIGURATION_LOADED, strlen(CUSTOM_CONFIGURATION_LOADED));
-			}else{
-				HAL_UART_Transmit_IT(&huart2,(uint8_t *)ERROR_STRING, strlen(ERROR_STRING));
-			}
 
+				send_message_IT((uint8_t *)CUSTOM_CONFIGURATION_LOADED, strlen(CUSTOM_CONFIGURATION_LOADED));
+
+			}else{
+
+				send_message_IT((uint8_t *)ERROR_STRING, strlen(ERROR_STRING));
+
+			}
 
 		}else{
 
 			load_default_configuration();
-			HAL_UART_Transmit(&huart2,(uint8_t *)DEFAULT_CONFIGURATION_LOADED, strlen(DEFAULT_CONFIGURATION_LOADED), HAL_MAX_DELAY);
 
+			send_message_IT((uint8_t *)DEFAULT_CONFIGURATION_LOADED, strlen(DEFAULT_CONFIGURATION_LOADED));
+
+			protocol.state = END_DEFAULT;
 		}
 	}
 
@@ -222,215 +229,4 @@ static int8_t load_default_configuration(){
 		return PROTOCOL_ERR;
 	}
 
-}
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-
-	if(protocol.state == START){
-
-		protocol.state = PIN_R;
-		HAL_UART_Transmit_IT(&huart2,(uint8_t *)INSERT_PIN , strlen(INSERT_PIN));
-		HAL_UART_Receive_IT(&huart2, (uint8_t*)pin_buffer, PIN_SIZE);// wait for receiving pin
-		//HAL_UART_Receive_IT(&huart2, &pin_buffer[pin_element_inserted], 1); // wait for receiving the first pin byte
-
-	}else if(protocol.state  == PIN_T){
-
-		protocol.state = DELAY1_R; // wait for delay1
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)INSERT_DELAY_SENSOR_1,strlen(INSERT_DELAY_SENSOR_1));
-		HAL_UART_Receive_IT(&huart2, (uint8_t *)delay1_buffer, DELAY_SIZE); // wait for receiving the first delay
-		/*if(pin_element_inserted < PIN_SIZE){ // check if the user has inserted all the 4 bytes for the pin
-
-			protocol.state = PIN_R;
-			HAL_UART_Receive_DMA(&huart2, &pin_buffer[pin_element_inserted], 1); // wait for receiving the next byte.
-
-		}else{
-
-			protocol.state = DELAY1_R; // wait for delay1
-			HAL_UART_Transmit_IT(&huart2, (uint8_t *)INSERT_DELAY_SENSOR_1,strlen(INSERT_DELAY_SENSOR_1));
-			HAL_UART_Receive_DMA(&huart2, &delay1_buffer[delay1_element_inserted], 1); // wait for receiving the first byte
-
-		}*/
-
-	}else if(protocol.state == DELAY1_T){
-
-		protocol.state = DELAY2_R;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)INSERT_DELAY_SENSOR_2,strlen(INSERT_DELAY_SENSOR_2));
-		HAL_UART_Receive_IT(&huart2, (uint8_t *)delay2_buffer, DELAY_SIZE);// wait for receiving the second delay
-		/*if(delay1_element_inserted < DELAY_SIZE){// check if the user has inserted all the 2 bytes for the delay
-
-			protocol.state = DELAY1_R;
-			HAL_UART_Receive_DMA(&huart2, &delay1_buffer[delay1_element_inserted], 1); // wait for receiving the next byte
-
-		}else{
-
-			protocol.state = DELAY2_R;
-			HAL_UART_Transmit_IT(&huart2, (uint8_t *)INSERT_DELAY_SENSOR_2,strlen(INSERT_DELAY_SENSOR_2));
-			HAL_UART_Receive_DMA(&huart2, &delay2_buffer[delay2_element_inserted], 1);// wait for receiving the first byte
-
-		}*/
-
-	}else if(protocol.state == DELAY2_T){
-
-		protocol.state = DURATION_R; // wait for duration
-		HAL_UART_Transmit_IT(&huart2,(uint8_t *)INSERT_ALLARM_DURATION,strlen(INSERT_ALLARM_DURATION));
-		HAL_UART_Receive_IT(&huart2, (uint8_t *)duration_buffer, DURATION_SIZE);// wait for receiving the duration
-
-		/*if(delay2_element_inserted < DELAY_SIZE){// check if the user has inserted all the 2 bytes for the delay
-
-			protocol.state = DELAY2_R;
-			HAL_UART_Receive_IT(&huart2, &delay2_buffer[delay2_element_inserted], DELAY_SIZE);
-
-		}else{
-
-			protocol.state = DURATION_R; // wait for duration
-			HAL_UART_Transmit_IT(&huart2,(uint8_t *)INSERT_ALLARM_DURATION,strlen(INSERT_ALLARM_DURATION));
-			HAL_UART_Receive_DMA(&huart2, &duration_buffer[duration_element_inserted], 1);// wait for receiving the first duration byte
-
-		}*/
-
-	}else if(protocol.state == DURATION_T){
-
-		protocol.state = DATE_R;
-		HAL_UART_Transmit_IT(&huart2,(uint8_t *)INSERT_DATE_TIME,strlen(INSERT_DATE_TIME));
-		HAL_UART_Receive_IT(&huart2, date_time_buffer, DATE_TIME_SIZE);// wait for receiving the  date
-		/*if(duration_element_inserted < DURATION_SIZE){
-
-			protocol.state = DURATION_R;
-			HAL_UART_Receive_DMA(&huart2, &duration_buffer[duration_element_inserted], 1);// wait for receiving the next duration byte
-
-		}else{
-
-			protocol.state = DATE_TIME_R;
-			HAL_UART_Transmit_IT(&huart2,(uint8_t *)INSERT_DATE_TIME,strlen(INSERT_DATE_TIME));
-			HAL_UART_Receive_DMA(&huart2, &date_time_buffer[date_time_element_inserted], 1);// wait for receiving the first date_time byte
-		}*/
-
-	}/*else if(protocol.state == DATE_TIME_T){
-
-
-
-
-		if(date_time_element_inserted < DATE_TIME_SIZE){
-
-			protocol.state = DATE_TIME_R;
-			HAL_UART_Receive_IT(&huart2, &date_time_buffer[date_time_element_inserted], 1); // wait for receiving the next date_time byte
-
-		}else{
-
-
-			protocol.state = END_CUSTOM;
-			stop_timer_IT(protocol.timer);
-
-		}*/
-	else if(protocol.state == DATE_T){
-
-		protocol.state = MONTH_R;
-		HAL_UART_Transmit_IT(&huart2, &slash, 1);
-		HAL_UART_Receive_IT(&huart2, date_time_buffer+DATE_TIME_SIZE, DATE_TIME_SIZE);// wait for receiving month
-
-	}
-	else if(protocol.state == MONTH_T){
-
-		protocol.state = YEAR_R;
-		HAL_UART_Transmit_IT(&huart2, &slash, 1);
-		HAL_UART_Receive_IT(&huart2, date_time_buffer+2*DATE_TIME_SIZE, DATE_TIME_SIZE);// wait for receiving year
-
-	}
-	else if(protocol.state == YEAR_T){
-
-		protocol.state = HOUR_R;
-		HAL_UART_Transmit_IT(&huart2, &space, 1);
-		HAL_UART_Receive_IT(&huart2, date_time_buffer+3*DATE_TIME_SIZE, DATE_TIME_SIZE);// wait for receiving hour
-
-	}
-	else if(protocol.state == HOUR_T){
-
-		protocol.state = MINUTE_R;
-		HAL_UART_Transmit_IT(&huart2, &colons,1);
-		HAL_UART_Receive_IT(&huart2, date_time_buffer+4*DATE_TIME_SIZE, DATE_TIME_SIZE);// wait for receiving minute
-
-	}
-	else if(protocol.state == MINUTE_T){
-
-		protocol.state = SECOND_R;
-		HAL_UART_Transmit_IT(&huart2,&colons,1);
-		HAL_UART_Receive_IT(&huart2, date_time_buffer+5*DATE_TIME_SIZE, DATE_TIME_SIZE);// wait for receiving second
-
-	}
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-
-	if(protocol.state == PIN_R ){
-
-		protocol.state = PIN_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)pin_buffer, PIN_SIZE);
-		/*pin_element_inserted += 1;
-		HAL_UART_Transmit_IT(&huart2, &pin_buffer[pin_element_inserted-1], 1);*/
-
-	}else if(protocol.state == DELAY1_R){
-
-		protocol.state = DELAY1_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)delay1_buffer,DELAY_SIZE);
-		/*delay1_element_inserted += 1;
-		HAL_UART_Transmit_IT(&huart2, &delay1_buffer[delay1_element_inserted-1],1);*/
-
-	}else if(protocol.state == DELAY2_R){
-
-		protocol.state = DELAY2_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)delay2_buffer,DELAY_SIZE);
-		/*delay2_element_inserted += 1;
-		HAL_UART_Transmit_IT(&huart2, &delay2_buffer[delay2_element_inserted-1],1);*/
-
-
-	}else if(protocol.state == DURATION_R){
-
-		protocol.state = DURATION_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)duration_buffer,DURATION_SIZE);
-		/*duration_element_inserted += 1;
-		HAL_UART_Transmit_IT(&huart2, &duration_buffer[duration_element_inserted-1],1);*/
-
-	}
-	else if(protocol.state == DATE_R){
-
-		protocol.state = DATE_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)date_time_buffer,DATE_TIME_SIZE);
-
-	}
-	else if(protocol.state == MONTH_R){
-
-		protocol.state = MONTH_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)date_time_buffer+DATE_TIME_SIZE,DATE_TIME_SIZE);
-
-	}
-	else if(protocol.state == YEAR_R){
-
-		protocol.state = YEAR_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)date_time_buffer+2*DATE_TIME_SIZE,DATE_TIME_SIZE);
-
-	}
-	else if(protocol.state == HOUR_R){
-
-		protocol.state = HOUR_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)date_time_buffer+3*DATE_TIME_SIZE,DATE_TIME_SIZE);
-
-	}
-	else if(protocol.state == MINUTE_R){
-
-		protocol.state = MINUTE_T;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)date_time_buffer+4*DATE_TIME_SIZE,DATE_TIME_SIZE);
-
-	}
-	else if(protocol.state == SECOND_R){
-
-		stop_timer_IT(protocol.timer);
-		protocol.state = END_CUSTOM;
-		HAL_UART_Transmit_IT(&huart2, (uint8_t *)date_time_buffer+5*DATE_TIME_SIZE,DATE_TIME_SIZE);
-
-	}
-
-	//HAL_UART_Transmit_IT(&huart2, (uint8_t *)date_time_buffer,DATE_TIME_SIZE);
-	/*protocol.state = DATE_TIME_T;
-}				date_time_element_inserted +=1;
-		HAL_UART_Transmit_IT(&huart2, &date_time_buffer[date_time_element_inserted-1],DATE_TIME_SIZE);*/
 }

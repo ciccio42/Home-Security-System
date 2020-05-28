@@ -35,7 +35,7 @@ void buzzer_init(buzzer *buzzer, buzzer_state state, TIM_HandleTypeDef *timer);
 /**
  * Basing on the input, it active buzzer with a specific ringtone
  */
-void active_buzzer(buzzer *buzzer, buzzer_state state, ringtone ringtone, TIM_HandleTypeDef *timer);
+void active_buzzer(buzzer *buzzer, buzzer_state state, int period, TIM_HandleTypeDef *timer);
 
 /**
  * Deactivate buzzer

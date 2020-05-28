@@ -17,21 +17,21 @@ void buzzer_init(buzzer *buzzer, buzzer_state state, TIM_HandleTypeDef *timer){
 }
 
 
-void active_buzzer(buzzer *buzzer, buzzer_state state, ringtone ringtone, TIM_HandleTypeDef *timer){
+void active_buzzer(buzzer *buzzer, buzzer_state state, int period, TIM_HandleTypeDef *timer){
 
 	buzzer->state = BUZZER_ACTIVE;
-	buzzer->ringtone = ringtone;
-	if(ringtone == RINGTONE_PIR){
-		__HAL_TIM_SET_AUTORELOAD(timer, 499);
+	if(period == 299){
+		buzzer->state = RINGTONE_PIR;
 	}
-	if(ringtone == RINGTONE_BARRIER){
-		__HAL_TIM_SET_AUTORELOAD(timer, 999); //questi timer sono htim3
+	if(period == 499){
+		buzzer->ringtone = RINGTONE_BARRIER;
 	}
-	if(ringtone == RINGTONE_BOTH){
-		__HAL_TIM_SET_AUTORELOAD(timer, 1499);
+	if(period == 999){
+		buzzer->ringtone = RINGTONE_BOTH;
 	}
 
 	HAL_TIM_PWM_Start_IT(timer, TIM_CHANNEL_2);
+	__HAL_TIM_SET_AUTORELOAD(timer, period);
 }
 
 

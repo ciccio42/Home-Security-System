@@ -11,11 +11,12 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 #include "handle_timer.h"
+#include "ds1307rtc.h"
 
 /**
  * @brief Define USER_PIN type
  */
-typedef uint8_t *user_pin;
+typedef uint8_t user_pin;
 /**
  * @brief Define Delay type;
  */
@@ -26,15 +27,17 @@ typedef uint8_t sensor_delay;
  */
 typedef uint8_t allarm_duration;
 
+
 /**
  * @brief Define Configuration structure
  */
 struct system_configuration_s{
 
-	user_pin pin;
+	user_pin *pin;
 	sensor_delay sensor_delay_1;
 	sensor_delay sensor_delay_2;
 	allarm_duration duration;
+	date_time_t date_time;
 
 };
 
@@ -66,6 +69,7 @@ typedef struct system_configuration_s system_configuration_t;
 #define PIN_SIZE (4)
 #define DELAY_SIZE (2)
 #define DURATION_SIZE (2)
+#define DATE_TIME_SIZE (19)
 
 /**
  * @brief define timer's period for configuration task.
@@ -86,7 +90,8 @@ typedef enum{
 	DELAY2_R,
 	DURATION_T,
 	DURATION_R,
-	DATE_TIME,
+	DATE_TIME_T,
+	DATE_TIME_R,
 	END_DEFAULT,
 	END_CUSTOM
 } Protocol_Status_Type;
@@ -99,6 +104,7 @@ typedef struct{
 	system_configuration_t *configuration;
 	Protocol_Status_Type state;
 	TIM_HandleTypeDef *timer;
+	rtc_t *rtc;
 
 }configuration_protocol_t;
 
@@ -107,14 +113,10 @@ extern configuration_protocol_t protocol;
 /**
  * @brief Initialize protocol's structure with the given system's configuration.
  */
-void init_protocol(system_configuration_t *configuration, TIM_HandleTypeDef *timer);
+void init_protocol(system_configuration_t *configuration, TIM_HandleTypeDef *timer, rtc_t *rtc);
 
 /**
  * @brief Perform system_configuration procedure in a blocking way.
- *
- * @param system_configuration reference to a system configuration structure
- *
- * @return 1 if the procedure succeed, otherwise -1
  */
 Protocol_Status_Type configuration_protocol();
 
@@ -126,7 +128,7 @@ static void load_default_configuration();
 /**
  * @brief load custom configuration parameters.
  */
-static uint8_t load_custom_configuration();
+static void load_custom_configuration();
 
 /**
  * @brief whether the configuration parameters inserted by the user are valid or not.

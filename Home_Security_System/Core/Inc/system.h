@@ -12,10 +12,22 @@
 #include "sensor_barrier.h"
 #include "buzzer.h"
 #include "tim.h"
-#include "system_configuration.h"
 #include "uart_handler.h"
 #include "ds1307rtc.h"
 
+/**
+ * @brief Define USER_PIN type
+ */
+typedef uint8_t user_pin;
+/**
+ * @brief Define Delay type;
+ */
+typedef uint8_t sensor_delay;
+
+/**
+ * @brief Define Duration type;
+ */
+typedef uint8_t allarm_duration;
 
 /**
  * @brief Define Configuration structure
@@ -29,6 +41,10 @@ struct system_configuration_s{
 
 };
 
+/**
+ * @brief Define System configuration type
+ */
+typedef struct system_configuration_s system_configuration_t;
 
 typedef enum{
 	SYSTEM_ACTIVE,

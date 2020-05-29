@@ -6,26 +6,14 @@
  */
 
 #ifndef INC_SYSTEM_CONFIGURATION_H_
+
 #define INC_SYSTEM_CONFIGURATION_H_
 
 #include <stdint.h>
 #include "stm32f4xx.h"
 #include "handle_timer.h"
 #include "ds1307rtc.h"
-
-/**
- * @brief Define USER_PIN type
- */
-typedef uint8_t user_pin;
-/**
- * @brief Define Delay type;
- */
-typedef uint8_t sensor_delay;
-
-/**
- * @brief Define Duration type;
- */
-typedef uint8_t allarm_duration;
+#include "system.h"
 
 /**
  * Define protocol Error
@@ -33,11 +21,6 @@ typedef uint8_t allarm_duration;
 #define PROTOCOL_OK (0)
 #define PROTOCOL_ERR (-1)
 
-
-/**
- * @brief Define System configuration type
- */
-typedef struct system_configuration_s system_configuration_t;
 
 /**
  * @brief Define default configuration values

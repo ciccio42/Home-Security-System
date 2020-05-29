@@ -5,6 +5,7 @@
 #include "handle_timer.h"
 #include "ds1307rtc.h"
 #include "uart_handler.h"
+#include "system.h"
 
 configuration_protocol_t protocol;
 
@@ -13,16 +14,6 @@ uint8_t delay1_buffer[DELAY_SIZE];
 uint8_t delay2_buffer[DELAY_SIZE];
 uint8_t duration_buffer[DURATION_SIZE];
 uint8_t date_time_buffer[DATE_TIME_BUFFER_SIZE];
-
-/**
- * Define variables that count the number of element inserted
- */
-/*uint8_t pin_element_inserted = 0;
-uint8_t delay1_element_inserted = 0;
-uint8_t delay2_element_inserted = 0;
-uint8_t duration_element_inserted = 0;
-uint8_t date_time_element_inserted = 0;
-uint8_t date_time_element_inserted = 0;*/
 
 uint8_t slash = '/';
 uint8_t space = ' ';

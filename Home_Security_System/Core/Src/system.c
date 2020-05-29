@@ -6,7 +6,7 @@
  */
 
 #include "system.h"
-
+#include "system_configuration.h"
 
 void system_init(system_s *system, system_state state, sensor_barrier *barrier, sensor_pir *pir, buzzer *buzzer){
 
@@ -14,9 +14,7 @@ void system_init(system_s *system, system_state state, sensor_barrier *barrier, 
 	system->barrier = barrier;
 	system->pir = pir;
 	system->buzzer = buzzer;
-
 }
-
 
 void active_system(system_s *system){
 

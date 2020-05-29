@@ -72,11 +72,11 @@ struct rtc_s{
 };
 
 typedef struct rtc_s rtc_t;
+
 /**
  * @brief timer initializer
 */
 int8_t ds1307rtc_init(rtc_t *rtc, I2C_HandleTypeDef *i2c);
-
 
 /**
  * @brief update the date_time structure referenced by the rtc pointer in non-blocking mode
